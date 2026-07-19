@@ -56,7 +56,7 @@ export default function Navbar() {
                   }`
                 }
               >
-                {("icon" in l) && l.icon}
+                {"icon" in l ? (l as { icon: React.ReactNode }).icon : null}
                 {l.label}
               </NavLink>
             ))}
@@ -116,7 +116,7 @@ export default function Navbar() {
                 }`
               }
             >
-              {("icon" in l) && l.icon}
+              {"icon" in l ? (l as { icon: React.ReactNode }).icon : null}
               {l.label}
             </NavLink>
           ))}

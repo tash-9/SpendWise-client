@@ -11,7 +11,10 @@ export default function Budgets() {
   const qc = useQueryClient();
   const month = new Date().toISOString().slice(0, 7);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ category: EXPENSE_CATEGORIES[0], limit: "" });
+  const [form, setForm] = useState<{ category: string; limit: string }>({
+    category: EXPENSE_CATEGORIES[0],
+    limit: "",
+  });
 
   const { data: budgets = [], isLoading } = useQuery<Budget[]>({
     queryKey: ["budgets", month],
