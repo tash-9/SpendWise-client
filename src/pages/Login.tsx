@@ -3,9 +3,11 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { TrendingDown, Zap } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useGoogleLogin } from "@react-oauth/google";
+import api from "../services/api";
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, setUser } = useAuth();
   const navigate = useNavigate();
   const from = (useLocation().state as { from?: string })?.from || "/dashboard";
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,31 @@ export default function Login() {
     }
   };
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+        ).then((r) => r.json());
+
+        const { data } = await api.post("/auth/google", {
+          email: userInfo.email,
+          name: userInfo.name,
+          avatar: userInfo.picture,
+        });
+
+        localStorage.setItem("sw-token", data.token);
+        setUser(data.user);
+        toast.success(`Welcome, ${data.user.name}! 👋`);
+        navigate("/dashboard");
+      } catch {
+        toast.error("Google login failed");
+      }
+    },
+    onError: () => toast.error("Google login failed"),
+  });
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-brand-50 to-white flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
@@ -46,11 +73,31 @@ export default function Login() {
           <button
             type="button"
             onClick={fillDemo}
-            className="w-full flex items-center justify-center gap-2 mb-6 border-2 border-dashed border-brand-200 text-brand-600 rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-50 transition-colors"
+            className="w-full flex items-center justify-center gap-2 mb-4 border-2 border-dashed border-brand-200 text-brand-600 rounded-xl py-2.5 text-sm font-semibold hover:bg-brand-50 transition-colors"
           >
             <Zap size={16} className="fill-brand-500" />
             Try demo account
           </button>
+
+          {/* Google login */}
+          <button
+            type="button"
+            onClick={() => googleLogin()}
+            className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5"
+          >
+            <img
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              className="w-5 h-5"
+              alt="Google"
+            />
+            Continue with Google
+          </button>
+
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400">or sign in with email</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
 
           <form onSubmit={submit} className="space-y-4">
             <div>

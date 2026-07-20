@@ -3,12 +3,54 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { TrendingDown } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import { useGoogleLogin } from "@react-oauth/google";
+import api from "../services/api";
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "" });
+
+  const { setUser } = useAuth();
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          { headers: { Authorization: `Bearer ${tokenResponse.access_token}` } }
+        ).then((r) => r.json());
+
+        const { data } = await api.post("/auth/google", {
+          email: userInfo.email,
+          name: userInfo.name,
+          avatar: userInfo.picture,
+        });
+
+        localStorage.setItem("sw-token", data.token);
+        setUser(data.user);
+        toast.success(`Account created! 🎉`);
+        navigate("/dashboard");
+      } catch {
+        toast.error("Google signup failed");
+      }
+    },
+    onError: () => toast.error("Google signup failed"),
+  });
+
+  <button
+  type="button"
+  onClick={() => googleLogin()}
+  className="w-full flex items-center justify-center gap-3 border border-gray-200 rounded-xl py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors mb-5"
+  >
+    <img
+      src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+      className="w-5 h-5"
+      alt="Google"
+    />
+    Continue with Google
+  </button>
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
