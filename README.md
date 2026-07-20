@@ -171,15 +171,5 @@ npm run preview  # Preview the production build locally
 
 ---
 
-## Environment Variables
-
-```
-VITE_API_URL=
-VITE_GOOGLE_CLIENT_ID=
-```
-
----
-
 ## Author
-
-Your Name
+Tasfia Islam Raisha
